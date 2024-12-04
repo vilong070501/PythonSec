@@ -24,6 +24,12 @@ Running OpenCanary
 opencanaryd --start
 ```
 
+Install libraries
+
+```bash
+pip install paramiko requests mysql-connector-python
+```
+
 Stopping OpenCanary
 
 ```bash
