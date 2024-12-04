@@ -2,6 +2,7 @@ import paramiko
 import ftplib
 import requests
 import mysql.connector
+import subprocess
 from mysql.connector import errors
 from time import sleep
 
@@ -67,7 +68,7 @@ def mysql_brute_force(target_ip, port=3306):
 def scan_ports(ip_range):
     print(f"Attempting nmap on " + ip_range)
     try:
-        scan_result = subprocess.run(['nmap', '-sP', ip_range], capture_output=True, text=True)
+        scan_result = subprocess.run(['nmap', '', ip_range], capture_output=True, text=True)
         print(scan_result.stdout)
     except Exception as e:
         print(f"Error when scanning ports : {e}")
