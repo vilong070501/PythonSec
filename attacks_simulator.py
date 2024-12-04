@@ -34,6 +34,7 @@ def ftp_attack(target_ip, port=21):
     except Exception as e:
         print(f"[-] FTP Attack Failed: {e}")
 
+
 def http_probe(target_ip, port=80):
     try:
         print(f"Probing HTTP server on {target_ip}")
@@ -63,8 +64,17 @@ def mysql_brute_force(target_ip, port=3306):
             except Exception as e:
                 print(f"Error: {e}")
 
+def scan_ports(ip_range):
+    print(f"Attempting nmap on " + ip_range)
+    try:
+        scan_result = subprocess.run(['nmap', '-sP', ip_range], capture_output=True, text=True)
+        print(scan_result.stdout)
+    except Exception as e:
+        print(f"Error when scanning ports : {e}")
+
 if __name__ == "__main__":
     target_ip = "127.0.0.1"  # Change to the IP of your OpenCanary honeypot
+    scan_ports(target_ip)
     sleep(2)
     brute_force_ssh(target_ip)
     sleep(2)
