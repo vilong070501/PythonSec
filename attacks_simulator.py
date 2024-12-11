@@ -74,7 +74,7 @@ def scan_ports(ip_range):
         print(f"Error when scanning ports : {e}")
 
 if __name__ == "__main__":
-    target_ip = "127.0.0.1"  # Change to the IP of your OpenCanary honeypot
+    target_ip = "127.0.0.1"
     scan_ports(target_ip)
     sleep(2)
     brute_force_ssh(target_ip)
