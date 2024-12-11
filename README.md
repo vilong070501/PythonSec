@@ -5,6 +5,11 @@
 python
 
 scapy
+## Prerequisites
+
+python
+
+scapy
 
 
 ## Install Honeypot OpenCanary
@@ -15,6 +20,16 @@ virtualenv env/
 . env/bin/activate
 pip install opencanary paramiko requests mysql-connector-python
 ```
+
+## Install scapy
+
+⚠️ Install scapy with **root** provileges
+
+```bash
+sudo pip install scapy
+```
+
+## Execute OpenCanary
 
 ## Install scapy
 
