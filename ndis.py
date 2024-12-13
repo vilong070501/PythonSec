@@ -8,7 +8,6 @@ import logging
 OPENCANARY_INTERFACE = "lo"
 ALERT_LOG_FILE = "nids_alerts.log"
 BLOCKED_IPS = set()
-ports_surveilles = [80, 443, 53, 25, 465, 587, 2525, 22, 21, 23, 3306]
 logging.basicConfig(filename=ALERT_LOG_FILE, level=logging.INFO)
 
 # Dictionnaire pour suivre les tentatives de connexion et les paquets
@@ -22,7 +21,7 @@ def block_ip(ip):
     if ip not in BLOCKED_IPS:
         try:
             print(f"Blocking IP: {ip}")
-            #os.system(f"sudo iptables -A INPUT -s {ip} -j DROP")
+            os.system(f"sudo iptables -A INPUT -s {ip} -j DROP")
             BLOCKED_IPS.add(ip)
             logging.info(f"Blocked IP: {ip}")
         except Exception as e:
@@ -44,7 +43,7 @@ def detect_ssh_brute_force(src_ip):
     ]
 
     # Si plus de 5 tentatives dans les 10 dernières secondes, c'est une attaque
-    if len(ssh_attempts[src_ip]) > 8:  # Seuil de force brute SSH
+    if len(ssh_attempts[src_ip]) > 6:  # Seuil de force brute SSH
         alert(f"[ALERT] Possible SSH brute-force attack detected from {src_ip}")
         block_ip(src_ip)
 ftp_attempts = defaultdict(list)
@@ -88,31 +87,14 @@ def detect_ddos(src_ip, dst_ip):
 # Détection de Scan de Ports
 def detect_scan(packet):
     if packet.haslayer(TCP):
-        ip_src = packet[IP].src
+        src_ip = packet[IP].src
         dport = packet[TCP].dport
-        if ip_src not in scan_ports:
-            scan_ports[ip_src] = set()
-        scan_ports[ip_src].add(dport)
-        if len(scan_ports[ip_src]) > 10:  # Seuil de détection
-            print(f"Port scan detected from {ip_src}")
-
-# Détection d'empoisonnement ARP
-def detect_arp_poisoning(packet):
-    src_ip = packet[ARP].psrc
-    src_mac = packet[ARP].hwsrc
-
-    if src_ip in arp_table:
-        if arp_table[src_ip] != src_mac:
-            alert(f"[ALERT] ARP Poisoning detected: {src_ip} is spoofed with {src_mac}")
-    else:
-        arp_table[src_ip] = src_mac
-
-# Détection Man-in-the-Middle (MITM)
-def detect_mitm():
-    mac_counter = Counter(arp_table.values())
-    for mac, count in mac_counter.items():
-        if count > 1:  # Une seule MAC associée à plusieurs IPs
-            alert(f"[ALERT] Possible MITM attack detected: MAC {mac} associated with multiple IPs")
+        if src_ip not in scan_ports:
+            scan_ports[src_ip] = set()
+        scan_ports[src_ip].add(dport)
+        if len(scan_ports[src_ip]) > 10:  # Seuil de détection
+            print(f"Port scan detected from {src_ip}")
+            block_ip(src_ip)
 
 # Détection d'injection SQL
 def detect_sql_injection(packet):
@@ -120,6 +102,7 @@ def detect_sql_injection(packet):
         load = packet["Raw"].load.decode(errors='ignore')
         if "SELECT" in load or "UNION" in load or "DROP" in load:
             print(f"SQL Injection detected: {load}")
+            block_ip(packet[IP].src)
 
 # Analyse des paquets
 def analyze_packet(packet):
@@ -137,10 +120,7 @@ def analyze_packet(packet):
                 detect_mysql_brute_force(src_ip)
         detect_sql_injection(packet)
         detect_ddos(src_ip, dst_ip)
-        detect_mitm()
         detect_scan(packet)
-    if ARP in packet:
-        detect_arp_poisoning(packet)
 
 # Capture des paquets
 def capture_packets():
